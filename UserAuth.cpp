@@ -217,7 +217,7 @@ void UserAuth::parseResponsePacket(RadiusPacket *packet, PluginContext * context
 		
 	if (DEBUG (context->getVerbosity()))
     	cerr << getTime() << "RADIUS-PLUGIN: parse_response_packet().\n";
-	
+
 
 	range=packet->findAttributes(22);
 	iter1=range.first;
@@ -245,16 +245,57 @@ void UserAuth::parseResponsePacket(RadiusPacket *packet, PluginContext * context
 	while (vendoriter1!=vendoriter2)
 	{
 		
-		pushroutes.append((char *) vendoriter1->second.getValue(),vendoriter1->second.getLength()-2);
+		pushroutes.append(this->valueToString(&(vendoriter1->second)));
 		pushroutes.append(";");
 		vendoriter1++;
 	
 	}
 	this->setPushRoutes(pushroutes);
-	
-	
+
 	if (DEBUG (context->getVerbosity()))
 		cerr << getTime() << "RADIUS-PLUGIN: BACKGROUND AUTH: push routes: " << this->getPushRoutes() <<".\n";
+
+	vendorrange=packet->findVendorAttributes(VENDOR_OPENVPN,ATTRIBUTE_OPENVPN_PUSHRESET);
+	if (vendorrange.first!=vendorrange.second)
+	{
+		this->setPushReset(this->valueToString(&(vendorrange.first->second)));
+		if (DEBUG (context->getVerbosity()))
+			cerr << getTime() << "RADIUS-PLUGIN: BACKGROUND AUTH: push reset: " << this->getPushReset() <<".\n";
+	}
+	
+	vendorrange=packet->findVendorAttributes(VENDOR_OPENVPN,ATTRIBUTE_OPENVPN_PUSH_REDIRECT_GATEWAY);
+	if (vendorrange.first!=vendorrange.second)
+	{
+		this->setPushRedirectGateway(this->valueToString(&(vendorrange.first->second)));
+		if (DEBUG (context->getVerbosity()))
+			cerr << getTime() << "RADIUS-PLUGIN: BACKGROUND AUTH: push redirect gateway: " << this->getPushRedirectGateway() <<".\n";
+	}
+
+	vendorrange=packet->findVendorAttributes(VENDOR_OPENVPN,ATTRIBUTE_OPENVPN_PUSH_ROUTE_DELAY);
+	if (vendorrange.first!=vendorrange.second)
+	{
+		this->setPushRouteDelay(this->valueToString(&(vendorrange.first->second)));
+		if (DEBUG (context->getVerbosity()))
+			cerr << getTime() << "RADIUS-PLUGIN: BACKGROUND AUTH: push route delay: " << this->getPushRouteDelay() <<".\n";
+	}
+
+	vendorrange=packet->findVendorAttributes(VENDOR_OPENVPN,ATTRIBUTE_OPENVPN_PUSH_DHCP_OPTION);
+
+	vendoriter1=vendorrange.first;
+	vendoriter2=vendorrange.second;	
+	string pushdhcpoptions;
+	while (vendoriter1!=vendoriter2)
+	{
+		
+		pushdhcpoptions.append(this->valueToString(&(vendoriter1->second)));
+		pushdhcpoptions.append(";");
+		vendoriter1++;
+	
+	}
+	this->setPushDhcpOption(pushdhcpoptions);
+
+	if (DEBUG (context->getVerbosity()))
+		cerr << getTime() << "RADIUS-PLUGIN: BACKGROUND AUTH: push dhcp option: " << this->getPushDhcpOption() <<".\n";
 	
 	range=packet->findAttributes(8);
 	iter1=range.first;
@@ -1512,6 +1553,8 @@ int UserAuth::createCcdFile(PluginContext *context)
 	char * route;
 	char framedip[16];
 	char ipstring[100];
+	char dhcpoptions[4096];
+	char * dhcpoption;
 	in_addr_t ip2;
 	in_addr ip3;
 	string filename;
@@ -1529,12 +1572,15 @@ int UserAuth::createCcdFile(PluginContext *context)
 	int len=0;
 	
 	
-	if(context->conf.getOverWriteCCFiles()==true && (this->getFramedIp().length() > 0 || this->getFramedRoutes().length() > 0 || this->getPushRoutes().length() > 0 ))
+	if(context->conf.getOverWriteCCFiles()==true && (this->getFramedIp().length() > 0 || this->getFramedRoutes().length() > 0 ||
+				this->getPushReset().length() > 0 || this->getPushRouteDelay().length() > 0 || this->getPushDhcpOption().length() > 0
+				|| this->getPushRedirectGateway().length() > 0 || this->getPushRoutes().length() > 0 ))
 	{
 		memset(ipstring,0,100);
 		memset(framedip,0,16);
 		memset(framedroutes,0,4096);
 		memset(pushroutes,0,4096);
+		memset(dhcpoptions,0,4096);
 			
 		//create the filename, ccd-path + commonname
 		filename=context->conf.getCcdPath()+this->getCommonname();
@@ -1553,10 +1599,61 @@ int UserAuth::createCcdFile(PluginContext *context)
 		// copy in a temp-string, becaue strtok deletes the delimiter, if it is used anywhere
 		strncpy(framedroutes,this->getFramedRoutes().c_str(),4095);
 		strncpy(pushroutes,this->getPushRoutes().c_str(),4095);
+		strncpy(dhcpoptions,this->getPushDhcpOption().c_str(),4095);
 		
 		
 		if (ccdfile.is_open())
 		{
+			if (this->getPushReset().length() > 0 && this->getPushReset().compare("1") == 0)
+			{
+				if (DEBUG (context->getVerbosity()))
+					cerr << getTime() << "RADIUS-PLUGIN: Write " << "push-reset" << " ccd-file.\n";
+				
+				ccdfile << "push-reset" <<"\n";
+			}
+
+			if (this->getPushRouteDelay().length() > 0)
+			{
+				if (DEBUG (context->getVerbosity()))
+					cerr << getTime() << "RADIUS-PLUGIN: Write " << "push route-delay " << this->getPushRouteDelay() << " ccd-file.\n";
+				
+				ccdfile << "push route-delay " << this->getPushRouteDelay() <<"\n";
+			}
+
+			if (this->getPushRedirectGateway().length() > 0 && this->getPushRedirectGateway().compare("1") == 0)
+			{
+				if (DEBUG (context->getVerbosity()))
+					cerr << getTime() << "RADIUS-PLUGIN: Write " << "push redirect-gateway def1 bypass-dhcp" << " ccd-file.\n";
+				
+				ccdfile << "push redirect-gateway def1 bypass-dhcp" <<"\n";
+			}
+
+			if (dhcpoptions[0]!='\0')
+			{
+				if (DEBUG (context->getVerbosity()))
+					cerr << getTime() << "RADIUS-PLUGIN: BACKGROUND AUTH: Write dhcp options to ccd-file.\n";
+			
+				dhcpoption=strtok(dhcpoptions,";");
+				len=strlen(dhcpoption);
+				if (len > 50) //this is too big! but the length is variable
+				{
+					cerr << getTime() <<"RADIUS-PLUGIN: Argument for dhcp option is to long (>50 Characters).\n";
+					return 1;
+				}
+				else
+				{
+					while (dhcpoption!=NULL)
+					{
+						//write iroute to client file
+						ccdfile << "push dhcp-option " << dhcpoption << "\n";
+
+						if (DEBUG (context->getVerbosity()))
+							cerr << getTime() << "RADIUS-PLUGIN: Write " << "push dhcp-option " << dhcpoption << " ccd-file.\n";
+
+						dhcpoption=strtok(NULL,";");
+					}
+				}
+			}
 			
 			//set the ip address in the file
 			if (this->framedip[0]!='\0')
@@ -1961,8 +2058,8 @@ int UserAuth::createCcdFile(PluginContext *context)
 					}
 				}
 			}
-		
-		ccdfile.close();
+
+			ccdfile.close();
 		}
 		else
 		{

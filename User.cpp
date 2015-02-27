@@ -187,6 +187,46 @@ void User::setPushRoutes(string froutes)
        this->pushroutes=froutes;
 }
 
+string User::getPushReset(void)
+{
+	return this->pushreset;
+}
+
+void User::setPushReset(string pushreset)
+{
+	this->pushreset=pushreset;
+}
+
+string User::getPushRouteDelay(void)
+{
+	return this->pushroutedelay;
+}
+
+void User::setPushRouteDelay(string pushroutedelay)
+{
+	this->pushroutedelay=pushroutedelay;
+}
+
+string User::getPushRedirectGateway(void)
+{
+	return this->pushredirectgateway;
+}
+
+void User::setPushRedirectGateway(string pushredirectgateway)
+{
+	this->pushredirectgateway=pushredirectgateway;
+}
+
+string User::getPushDhcpOption(void)
+{
+	return this->pushdhcpoption;
+}
+
+void User::setPushDhcpOption(string pushdhcpoption)
+{
+	this->pushdhcpoption=pushdhcpoption;
+}
+
 /** The getter method for the framed ip.
  *  @return The framed ip as a string.*/
 string User::getFramedIp(void)
