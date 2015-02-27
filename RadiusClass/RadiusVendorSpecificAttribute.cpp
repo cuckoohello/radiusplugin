@@ -54,11 +54,11 @@ RadiusVendorSpecificAttribute::~RadiusVendorSpecificAttribute(void)
 void RadiusVendorSpecificAttribute::dumpRadiusAttrib(void)
 {
 	int		i;
-	fprintf(stdout,"\tid\t\t:\t%d%d%d%d\t|",this->id[0],this->id[1],this->id[2],this->id[3]);
+	fprintf(stdout,"\tid\t\t:\t%d\t|",this->getId());
 	fprintf(stdout,"\ttype\t\t:\t%d\t|",this->type);
 	fprintf(stdout,"\tlength\t:\t%d\t|",this->getLength());
 	fprintf(stdout,"\tvalue\t:\t ->");
-	for(i=0;i<((this->getLength())-6);i++)
+	for(i=0;i<((this->getLength())-2);i++)
 		fputc(this->value[i],stdout);
 	
 	fprintf(stdout,"<-\n");

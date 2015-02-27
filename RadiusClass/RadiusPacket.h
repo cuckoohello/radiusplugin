@@ -41,6 +41,7 @@
 #include "error.h"
 #include "radius.h"
 #include "RadiusAttribute.h"
+#include "RadiusVendorSpecificAttribute.h"
 #include "RadiusServer.h"
 
 
@@ -58,6 +59,7 @@ class RadiusPacket
 private:
 	
 	multimap<Octet,RadiusAttribute> attribs; 	/**The multimap for the radius attributes.*/
+	multimap<unsigned int,RadiusVendorSpecificAttribute> vendorattribs; 	/**The multimap for the radius vendor attributes.*/
 	int					sock; 					/**<The socket which is used.*/
 	Octet				code; 					/**< The code of the packet, see the Radius RFC or radius.h*/
 	Octet				identifier; 			/**<The identifier of the packet, it is generated randomly.*/			
@@ -89,6 +91,7 @@ public:
 					RadiusPacket(Octet code);
 					
 	int				addRadiusAttribute(RadiusAttribute *);
+	int				addRadiusVendorSpecificAttribute(RadiusVendorSpecificAttribute *);
 		
 	void			dumpRadiusPacket(void);
 	void			dumpShapedRadiusPacket(void);
@@ -104,6 +107,7 @@ public:
 	int				authenticateReceivedPacket(const char *secret);
 	
 	pair<multimap<Octet,RadiusAttribute>::iterator,multimap<Octet,RadiusAttribute>::iterator> findAttributes(int type);
+	pair<multimap<unsigned int,RadiusVendorSpecificAttribute>::iterator,multimap<unsigned int,RadiusVendorSpecificAttribute>::iterator> findVendorAttributes(int vendor, int type);
 	
 };
 

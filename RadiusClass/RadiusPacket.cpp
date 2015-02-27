@@ -107,6 +107,10 @@ void RadiusPacket::dumpRadiusPacket(void)
 	{
 		it->second.dumpRadiusAttrib();
 	}
+	for (multimap<unsigned int, RadiusVendorSpecificAttribute>::iterator it = vendorattribs.begin(); it != vendorattribs.end(); ++it)
+	{
+		it->second.dumpRadiusAttrib();
+	}
 		
 	fprintf(stdout,"---------------------------------\n");
 
@@ -127,6 +131,21 @@ int RadiusPacket::getRadiusAttribNumber(void)
 	return i;
 }
 
+int RadiusPacket::addRadiusVendorSpecificAttribute(RadiusVendorSpecificAttribute *vsa)
+{
+	if (vsa->getLength()<1)
+	{
+		cerr << "No value in the Attribute!\n";
+		return NO_VALUE_IN_ATTRIBUTE;
+	}
+	
+	//insert the attribute in the list
+	vendorattribs.insert(pair<unsigned int,RadiusVendorSpecificAttribute>((unsigned int)vsa->getId()*256+(unsigned int)vsa->getType(), *vsa));
+	
+	//add the length of the attribute to the the packet length
+	this->length=this->length+vsa->getLength()+6;
+	return 0;
+}
 
 /**	Links a radiusAttrib structure to a radiusPacket.
  * @param ra The radius attribute to add.
@@ -316,6 +335,7 @@ void	RadiusPacket::dumpShapedRadiusPacket(void)
 int RadiusPacket::unShapeRadiusPacket(void)
 {
 	RadiusAttribute		*ra;
+	RadiusVendorSpecificAttribute *vsa;	
 	int					pos,i;
 	char				*value; 			
 	
@@ -340,37 +360,49 @@ int RadiusPacket::unShapeRadiusPacket(void)
 	while(pos<this->recvbufferlen)
 	{
 		//for every turn create a new attribute
-		if(!(ra=new RadiusAttribute))
-		{
-			return ALLOC_ERROR;
-		}
-				
-		ra->setType(recvbuffer[pos++]);
-		ra->setLength(recvbuffer[pos++]);
-		
-		//the maximum attribute size can be 
-		//RADIUS_MAX_PACKET_LEN-20, 20: bytes of the
-		//packet header.
-		if(ra->getLength()>(RADIUS_MAX_PACKET_LEN-20))
-		{
-			return TO_BIG_ATTRIBUTE_LENGTH;
-		}
-		else
-		{
-				
-			value=new char [ra->getLength()-2];
-			for(i=0;i<(ra->getLength()-2);i++)
+		if (recvbuffer[pos] == 26){
+			if(!(vsa=new RadiusVendorSpecificAttribute))
 			{
-				value[i]=recvbuffer[pos++];
+				return ALLOC_ERROR;
 			}
-			ra->setRecvValue(value);		
-			this->addRadiusAttribute(ra);
-			this->length+=ra->getLength();
-			delete [] value;
-				
+			vsa->decodeRecvAttribute(recvbuffer+pos+2);
+			this->addRadiusVendorSpecificAttribute(vsa);
+
+			pos=pos+recvbuffer[pos+1];
+
+			delete vsa;
+		}else{
+			if(!(ra=new RadiusAttribute))
+			{
+				return ALLOC_ERROR;
+			}
+
+			ra->setType(recvbuffer[pos++]);
+			ra->setLength(recvbuffer[pos++]);
+
+			//the maximum attribute size can be 
+			//RADIUS_MAX_PACKET_LEN-20, 20: bytes of the
+			//packet header.
+			if(ra->getLength()>(RADIUS_MAX_PACKET_LEN-20))
+			{
+				return TO_BIG_ATTRIBUTE_LENGTH;
+			}
+			else
+			{
+
+				value=new char [ra->getLength()-2];
+				for(i=0;i<(ra->getLength()-2);i++)
+				{
+					value[i]=recvbuffer[pos++];
+				}
+				ra->setRecvValue(value);		
+				this->addRadiusAttribute(ra);
+				delete [] value;
+
+			}
+			//free the attribute, it was inserted in the list
+			delete ra;
 		}
-		//free the attribute, it was inserted in the list
-		delete ra;
 	}
 	//set the right length
 	this->length=this->recvbufferlen;
@@ -644,6 +676,13 @@ pair<multimap<Octet,RadiusAttribute>::iterator,multimap<Octet,RadiusAttribute>::
 {
 	pair<multimap<Octet,RadiusAttribute>::iterator,multimap<Octet,RadiusAttribute>::iterator> p;
 	p=attribs.equal_range((Octet) type);
+	return p;
+}
+
+pair<multimap<unsigned int,RadiusVendorSpecificAttribute>::iterator,multimap<unsigned int,RadiusVendorSpecificAttribute>::iterator> RadiusPacket::findVendorAttributes(int vendor, int type)
+{
+	pair<multimap<unsigned int,RadiusVendorSpecificAttribute>::iterator,multimap<unsigned int,RadiusVendorSpecificAttribute>::iterator> p;
+	p=vendorattribs.equal_range((unsigned int)vendor*256+(unsigned int)type);
 	return p;
 }
 
