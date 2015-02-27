@@ -1563,8 +1563,7 @@ int UserAuth::createCcdFile(PluginContext *context)
 	char framednetmask_cidr[3]; // ->/24
 	char framednetmask[16]; // ->255.255.255.0
 	char mask_part[6];
-	char framedgw[16];
-	char framedmetric[5]; //what is the biggest metric? 
+	char gatewaymetric[30];
 	
 	double d1,d2;
 	
@@ -1725,161 +1724,123 @@ int UserAuth::createCcdFile(PluginContext *context)
 				{
 					while (route!=NULL)
 					{
+						len=strlen(route);
 						j=0;k=0;
 						//set everything back for the next route entry
 						memset(mask_part,0,6);
 						memset(framednetmask_cidr,0,3);
 						memset(framedip,0,16);
 						memset(framednetmask,0,16);
-						memset(framedgw,0,16);
-						memset(framedmetric,0,5);
-						
+
 						//add ip address to string
 						while(route[j]!='/' && j<len)
+						{
+							if (route[j]!=' ')
 							{
-								if (route[j]!=' ')
-								{
-									framedip[k]=route[j];
-									k++;
-								}
-								j++;
-							}
-							k=0;
-							j++;
-							//add netmask
-							while(route[j]!=' ' && j<=len)
-							{
-								framednetmask_cidr[k]=route[j];
+								framedip[k]=route[j];
 								k++;
-								j++;
-							}
-							k=0;
-							//jump spaces
-							while(route[j]==' ' && j<len)
-							{
-								j++;
-							}
-							//find gateway
-							while(route[j]!='/' && j<len)
-							{
-								if (route[j]!=' ')
-								{
-									framedgw[k]=route[j];
-									k++;
-								}
-								j++;
 							}
 							j++;
-							
-							//find gateway netmask (this isn't used
-							//at the command route under linux)
-							while(route[j]!=' ' && j<len)
+						}
+						k=0;
+						j++;
+						//add netmask
+						while(route[j]!=' ' && j<=len)
+						{
+							framednetmask_cidr[k]=route[j];
+							k++;
+							j++;
+						}
+						//create string for client config file
+						//transform framednetmask_cidr
+						d2=7;
+						d1=0;
+						memset(framednetmask,0,16);
+						if (atoi(framednetmask_cidr)>32)
+						{
+							cerr << getTime() << "RADIUS-PLUGIN: Bad net CIDR netmask.\n";
+						}
+						else
+						{
+							j=atoi(framednetmask_cidr);
+							for (k=1; k<=j; k++)
 							{
-								j++;
+								d1=d1+pow(2,d2);
+								d2--;
+
+								if (k==8)
+								{
+									sprintf(mask_part,"%.0lf.", d1);
+									d1=0;
+									d2=7;
+									strncat(framednetmask, mask_part, 4);
+									memset(mask_part,0,6);
+								}
+								if(k==16)
+								{
+									sprintf(mask_part,"%.0lf.", d1);
+									d1=0;
+									d2=7;
+									strncat(framednetmask, mask_part, 4);
+									memset(mask_part,0,6);
+								}
+								if(k==24)
+								{
+									sprintf(mask_part,"%.0lf.", d1);
+									d1=0;
+									d2=7;
+									strncat(framednetmask, mask_part, 4);
+									memset(mask_part,0,6);
+								}
 							}
-							//jump spaces
-							
-							while(route[j]==' ' && j<len )
+							if (j<8)
 							{
-								j++;
+								sprintf(mask_part,"%.0lf.", d1);
+								d1=0;
+								strncat(framednetmask, mask_part, 4);
+								strncat(framednetmask, "0.0.0", 5);
+								memset(mask_part,0,6);
 							}
-							k=0;
-							if (j<=len)
+							else if (j<16)
 							{
-							
-								k=0;
-								//find the metric
-								while(route[j]!=' ' && j<len)
-								{
-									framedmetric[k]=route[j];
-									k++;
-									j++;
-								}
+								sprintf(mask_part,"%.0lf.", d1);
+								d1=0;
+								strncat(framednetmask, mask_part, 4);
+								strncat(framednetmask, "0.0", 3);
+								memset(mask_part,0,6);
 							}
-																								
-							//create string for client config file
-							//transform framednetmask_cidr
-							d2=7;
-							d1=0;
-							memset(framednetmask,0,16);
-							if (atoi(framednetmask_cidr)>32)
+							else if (j<24)
 							{
-								cerr << getTime() << "RADIUS-PLUGIN: Bad net CIDR netmask.\n";
+								sprintf(mask_part,"%.0lf.", d1);
+								d1=0;
+								strncat(framednetmask, mask_part, 4);
+								strncat(framednetmask, "0", 1);
+								memset(mask_part,0,6);
 							}
-							else
+							else if (j==24)
 							{
-								for (k=1; k<=atoi(framednetmask_cidr); k++)
-								{
-									d1=d1+pow(2,d2);
-									d2--;
-									
-									if (k==8)
-									{
-										sprintf(mask_part,"%.0lf.", d1);
-										d1=0;
-										d2=7;
-										strncat(framednetmask, mask_part, 4);
-										memset(mask_part,0,6);
-									}
-									if(k==16)
-									{
-										sprintf(mask_part,"%.0lf.", d1);
-										d1=0;
-										d2=7;
-										strncat(framednetmask, mask_part, 4);
-										memset(mask_part,0,6);
-									}
-									if(k==24)
-									{
-										sprintf(mask_part,"%.0lf.", d1);
-										d1=0;
-										d2=7;
-										strncat(framednetmask, mask_part, 4);
-										memset(mask_part,0,6);
-									}
-								}
-								if (j<8)
-								{
-										sprintf(mask_part,"%.0lf.", d1);
-										d1=0;
-										strncat(framednetmask, mask_part, 4);
-										strncat(framednetmask, "0.0.0", 5);
-										memset(mask_part,0,6);
-								}
-								else if (j<16)
-								{
-										sprintf(mask_part,"%.0lf.", d1);
-										d1=0;
-										strncat(framednetmask, mask_part, 4);
-										strncat(framednetmask, "0.0", 3);
-										memset(mask_part,0,6);
-								}
-								else if (j<24)
-								{
-										sprintf(mask_part,"%.0lf.", d1);
-										d1=0;
-										strncat(framednetmask, mask_part, 4);
-										strncat(framednetmask, "0", 1);
-										memset(mask_part,0,6);
-								}
-								else if (j>24)
-								{
-										sprintf(mask_part,"%.0lf", d1);
-										d1=0;
-										strncat(framednetmask, mask_part, 4);
-										memset(mask_part,0,6);
-								}
-								
-								
+								d1=0;
+								strncat(framednetmask, "0", 1);
+								memset(mask_part,0,6);
 							}
-							
-							if (DEBUG (context->getVerbosity()))
-		    						cerr << getTime() << "RADIUS-PLUGIN: Write route string: iroute " << framedip << framednetmask << " to ccd-file.\n";
-			
-							//write iroute to client file
-							ccdfile << "iroute " << framedip << " "<< framednetmask << "\n";
-						
-							route=strtok(NULL,";");
+							else if (j>24)
+							{
+								sprintf(mask_part,"%.0lf", d1);
+								d1=0;
+								strncat(framednetmask, mask_part, 4);
+								memset(mask_part,0,6);
+							}
+
+
+						}
+
+						if (DEBUG (context->getVerbosity()))
+							cerr << getTime() << "RADIUS-PLUGIN: Write route string: iroute " << framedip << " " << framednetmask << " to ccd-file.\n";
+
+						//write iroute to client file
+						ccdfile << "iroute " << framedip << " "<< framednetmask << "\n";
+
+						route=strtok(NULL,";");
 					}
 				}
 			}
@@ -1888,7 +1849,7 @@ int UserAuth::createCcdFile(PluginContext *context)
 			{
 				if (DEBUG (context->getVerbosity()))
 					cerr << getTime() << "RADIUS-PLUGIN: BACKGROUND AUTH: Write push routes to ccd-file.\n";
-			
+
 				route=strtok(pushroutes,";");
 				len=strlen(route);
 				if (len > 50) //this is too big! but the length is variable
@@ -1900,161 +1861,129 @@ int UserAuth::createCcdFile(PluginContext *context)
 				{
 					while (route!=NULL)
 					{
+						len=strlen(route);
 						j=0;k=0;
 						//set everything back for the next route entry
 						memset(mask_part,0,6);
 						memset(framednetmask_cidr,0,3);
 						memset(framedip,0,16);
 						memset(framednetmask,0,16);
-						memset(framedgw,0,16);
-						memset(framedmetric,0,5);
-						
+
 						//add ip address to string
 						while(route[j]!='/' && j<len)
+						{
+							if (route[j]!=' ')
 							{
-								if (route[j]!=' ')
-								{
-									framedip[k]=route[j];
-									k++;
-								}
-								j++;
-							}
-							k=0;
-							j++;
-							//add netmask
-							while(route[j]!=' ' && j<=len)
-							{
-								framednetmask_cidr[k]=route[j];
+								framedip[k]=route[j];
 								k++;
-								j++;
-							}
-							k=0;
-							//jump spaces
-							while(route[j]==' ' && j<len)
-							{
-								j++;
-							}
-							//find gateway
-							while(route[j]!='/' && j<len)
-							{
-								if (route[j]!=' ')
-								{
-									framedgw[k]=route[j];
-									k++;
-								}
-								j++;
 							}
 							j++;
-							
-							//find gateway netmask (this isn't used
-							//at the command route under linux)
-							while(route[j]!=' ' && j<len)
+						}
+						k=0;
+						j++;
+						//add netmask
+						while(route[j]!=' ' && j<=len)
+						{
+							framednetmask_cidr[k]=route[j];
+							k++;
+							j++;
+						}
+						memset(gatewaymetric,0,30);
+						if (j<len)
+						{
+							strncat(gatewaymetric,route+j,29);
+						}
+
+						//create string for client config file
+						//transform framednetmask_cidr
+						d2=7;
+						d1=0;
+						memset(framednetmask,0,16);
+						if (atoi(framednetmask_cidr)>32)
+						{
+							cerr << getTime() << "RADIUS-PLUGIN: Bad net CIDR netmask.\n";
+						}
+						else
+						{
+							j=atoi(framednetmask_cidr);
+							for (k=1; k<=j; k++)
 							{
-								j++;
+								d1=d1+pow(2,d2);
+								d2--;
+
+								if (k==8)
+								{
+									sprintf(mask_part,"%.0lf.", d1);
+									d1=0;
+									d2=7;
+									strncat(framednetmask, mask_part, 4);
+									memset(mask_part,0,6);
+								}
+								if(k==16)
+								{
+									sprintf(mask_part,"%.0lf.", d1);
+									d1=0;
+									d2=7;
+									strncat(framednetmask, mask_part, 4);
+									memset(mask_part,0,6);
+								}
+								if(k==24)
+								{
+									sprintf(mask_part,"%.0lf.", d1);
+									d1=0;
+									d2=7;
+									strncat(framednetmask, mask_part, 4);
+									memset(mask_part,0,6);
+								}
 							}
-							//jump spaces
-							
-							while(route[j]==' ' && j<len )
+							if (j<8)
 							{
-								j++;
+								sprintf(mask_part,"%.0lf.", d1);
+								d1=0;
+								strncat(framednetmask, mask_part, 4);
+								strncat(framednetmask, "0.0.0", 5);
+								memset(mask_part,0,6);
 							}
-							k=0;
-							if (j<=len)
+							else if (j<16)
 							{
-							
-								k=0;
-								//find the metric
-								while(route[j]!=' ' && j<len)
-								{
-									framedmetric[k]=route[j];
-									k++;
-									j++;
-								}
+								sprintf(mask_part,"%.0lf.", d1);
+								d1=0;
+								strncat(framednetmask, mask_part, 4);
+								strncat(framednetmask, "0.0", 3);
+								memset(mask_part,0,6);
 							}
-																								
-							//create string for client config file
-							//transform framednetmask_cidr
-							d2=7;
-							d1=0;
-							memset(framednetmask,0,16);
-							if (atoi(framednetmask_cidr)>32)
+							else if (j<24)
 							{
-								cerr << getTime() << "RADIUS-PLUGIN: Bad net CIDR netmask.\n";
+								sprintf(mask_part,"%.0lf.", d1);
+								d1=0;
+								strncat(framednetmask, mask_part, 4);
+								strncat(framednetmask, "0", 1);
+								memset(mask_part,0,6);
 							}
-							else
+							else if (j==24)
 							{
-								for (k=1; k<=atoi(framednetmask_cidr); k++)
-								{
-									d1=d1+pow(2,d2);
-									d2--;
-									
-									if (k==8)
-									{
-										sprintf(mask_part,"%.0lf.", d1);
-										d1=0;
-										d2=7;
-										strncat(framednetmask, mask_part, 4);
-										memset(mask_part,0,6);
-									}
-									if(k==16)
-									{
-										sprintf(mask_part,"%.0lf.", d1);
-										d1=0;
-										d2=7;
-										strncat(framednetmask, mask_part, 4);
-										memset(mask_part,0,6);
-									}
-									if(k==24)
-									{
-										sprintf(mask_part,"%.0lf.", d1);
-										d1=0;
-										d2=7;
-										strncat(framednetmask, mask_part, 4);
-										memset(mask_part,0,6);
-									}
-								}
-								if (j<8)
-								{
-										sprintf(mask_part,"%.0lf.", d1);
-										d1=0;
-										strncat(framednetmask, mask_part, 4);
-										strncat(framednetmask, "0.0.0", 5);
-										memset(mask_part,0,6);
-								}
-								else if (j<16)
-								{
-										sprintf(mask_part,"%.0lf.", d1);
-										d1=0;
-										strncat(framednetmask, mask_part, 4);
-										strncat(framednetmask, "0.0", 3);
-										memset(mask_part,0,6);
-								}
-								else if (j<24)
-								{
-										sprintf(mask_part,"%.0lf.", d1);
-										d1=0;
-										strncat(framednetmask, mask_part, 4);
-										strncat(framednetmask, "0", 1);
-										memset(mask_part,0,6);
-								}
-								else if (j>24)
-								{
-										sprintf(mask_part,"%.0lf", d1);
-										d1=0;
-										strncat(framednetmask, mask_part, 4);
-										memset(mask_part,0,6);
-								}
-								
-								
+								d1=0;
+								strncat(framednetmask, "0", 1);
+								memset(mask_part,0,6);
 							}
-							
-							if (DEBUG (context->getVerbosity()))
-								cerr << getTime() << "RADIUS-PLUGIN: Write route string: push route " << framedip << framednetmask << " to ccd-file.\n";
-			
-							//write iroute to client file
-							ccdfile << "push route " << framedip << " "<< framednetmask << "\n";
-						
-							route=strtok(NULL,";");
+							else if (j>24)
+							{
+								sprintf(mask_part,"%.0lf", d1);
+								d1=0;
+								strncat(framednetmask, mask_part, 4);
+								memset(mask_part,0,6);
+							}
+
+
+						}
+
+						if (DEBUG (context->getVerbosity()))
+							cerr << getTime() << "RADIUS-PLUGIN: Write route string: push route " << framedip << " " << framednetmask << gatewaymetric << " to ccd-file.\n";
+
+						//write iroute to client file
+						ccdfile << "push route " << framedip << " "<< framednetmask << gatewaymetric << "\n";
+
+						route=strtok(NULL,";");
 					}
 				}
 			}
