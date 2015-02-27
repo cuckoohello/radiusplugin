@@ -177,6 +177,16 @@ void User::setFramedRoutes(string froutes)
 	this->framedroutes=froutes;
 }
 
+string User::getPushRoutes(void)
+{
+       return this->pushroutes;
+}
+
+void User::setPushRoutes(string froutes)
+{
+       this->pushroutes=froutes;
+}
+
 /** The getter method for the framed ip.
  *  @return The framed ip as a string.*/
 string User::getFramedIp(void)

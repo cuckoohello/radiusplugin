@@ -33,6 +33,7 @@ VENDOR	USR				429
 VENDOR	Versanet			2180
 VENDOR	WISPr				14122
 VENDOR	Xedia				838
+VENDOR	OpenVPN				27340
 
 ATTRIBUTE	User-Name			1	string	
 ATTRIBUTE	Password			2	string	
@@ -1384,6 +1385,11 @@ ATTRIBUTE	WISPr-Bandwidth-Max-Down	8	integer	WISPr
 ATTRIBUTE	WISPr-Session-Terminate-Time	9	string	WISPr
 ATTRIBUTE	WISPr-Session-Terminate-End-Of-Day	10	string	WISPr
 ATTRIBUTE	WISPr-Billing-Class-Of-Service	11	string	WISPr
+ATTRIBUTE	OpenVPN-PushReset		1	integer	OpenVPN
+ATTRIBUTE	OpenVPN-Push-Route		2	string	OpenVPN
+ATTRIBUTE	OpenVPN-Push-Route-Delay	3	string	OpenVPN
+ATTRIBUTE	OpenVPN-Push-Redirect-Gateway	4	integer	OpenVPN
+ATTRIBUTE	OpenVPN-Push-Dhcp-Option	5	string	OpenVPN
 
 VALUE	AAT-IP-TOS			IP-TOS-Normal			0	Alcatel
 VALUE	AAT-IP-TOS			IP-TOS-Disabled			1	Alcatel
@@ -2679,4 +2685,8 @@ VALUE	Versanet-Termination-Cause	Key-abort-disconnect		20	Versanet
 VALUE	Versanet-Termination-Cause	Clears-previous-disc-reason	21	Versanet
 VALUE	Versanet-Termination-Cause	No-connection-established	22	Versanet
 VALUE	Versanet-Termination-Cause	Disconnect-after-three-retrains	23	Versanet
+VALUE	OpenVPN-PushReset		FALSE				0	OpenVPN
+VALUE	OpenVPN-PushReset		TRUE				1	OpenVPN
+VALUE	OpenVPN-Push-Redirect-Gateway	FALSE				0	OpenVPN
+VALUE	OpenVPN-Push-Redirect-Gateway	TRUE				1	OpenVPN
 

@@ -209,14 +209,16 @@ int UserAuth::sendAcceptRequestPacket(PluginContext * context)
 void UserAuth::parseResponsePacket(RadiusPacket *packet, PluginContext * context)
 {
 	pair <multimap<Octet,RadiusAttribute>::iterator,multimap<Octet,RadiusAttribute>::iterator> range;
+	pair<multimap<unsigned int,RadiusVendorSpecificAttribute>::iterator,multimap<unsigned int,RadiusVendorSpecificAttribute>::iterator> vendorrange;
+
 	multimap<Octet,RadiusAttribute>::iterator iter1, iter2;
+	multimap<unsigned int,RadiusVendorSpecificAttribute>::iterator vendoriter1, vendoriter2;
 	RadiusVendorSpecificAttribute vsa;
 		
 	if (DEBUG (context->getVerbosity()))
     	cerr << getTime() << "RADIUS-PLUGIN: parse_response_packet().\n";
 	
-	
-	
+
 	range=packet->findAttributes(22);
 	iter1=range.first;
 	iter2=range.second;	
@@ -235,6 +237,24 @@ void UserAuth::parseResponsePacket(RadiusPacket *packet, PluginContext * context
 	if (DEBUG (context->getVerbosity()))
     	cerr << getTime() << "RADIUS-PLUGIN: BACKGROUND AUTH: routes: " << this->getFramedRoutes() <<".\n";
 	
+	vendorrange=packet->findVendorAttributes(VENDOR_OPENVPN,ATTRIBUTE_OPENVPN_PUSH_ROUTE);
+
+	vendoriter1=vendorrange.first;
+	vendoriter2=vendorrange.second;	
+	string pushroutes;
+	while (vendoriter1!=vendoriter2)
+	{
+		
+		pushroutes.append((char *) vendoriter1->second.getValue(),vendoriter1->second.getLength()-2);
+		pushroutes.append(";");
+		vendoriter1++;
+	
+	}
+	this->setPushRoutes(pushroutes);
+	
+	
+	if (DEBUG (context->getVerbosity()))
+		cerr << getTime() << "RADIUS-PLUGIN: BACKGROUND AUTH: push routes: " << this->getPushRoutes() <<".\n";
 	
 	range=packet->findAttributes(8);
 	iter1=range.first;
@@ -937,6 +957,8 @@ string UserAuth::valueToString(RadiusVendorSpecificAttribute *vsa)
 	|| (id == VENDOR_WISPR && type == ATTRIBUTE_WISPR_BANDWIDTH_MIN_DOWN)
 	|| (id == VENDOR_WISPR && type == ATTRIBUTE_WISPR_BANDWIDTH_MAX_UP)
 	|| (id == VENDOR_WISPR && type == ATTRIBUTE_WISPR_BANDWIDTH_MAX_DOWN)
+	|| (id == VENDOR_OPENVPN && type == ATTRIBUTE_OPENVPN_PUSHRESET)
+	|| (id == VENDOR_OPENVPN && type == ATTRIBUTE_OPENVPN_PUSH_REDIRECT_GATEWAY)
 	)
 	{
 	 sprintf(buffer, "%d", vsa->intFromBuf());
@@ -1370,6 +1392,9 @@ string UserAuth::valueToString(RadiusVendorSpecificAttribute *vsa)
 	|| (id == VENDOR_WISPR && type == ATTRIBUTE_WISPR_SESSION_TERMINATE_TIME)
 	|| (id == VENDOR_WISPR && type == ATTRIBUTE_WISPR_SESSION_TERMINATE_END_OF_DAY)
 	|| (id == VENDOR_WISPR && type == ATTRIBUTE_WISPR_BILLING_CLASS_OF_SERVICE)
+	|| (id == VENDOR_OPENVPN && type == ATTRIBUTE_OPENVPN_PUSH_ROUTE)
+	|| (id == VENDOR_OPENVPN && type == ATTRIBUTE_OPENVPN_PUSH_ROUTE_DELAY)
+	|| (id == VENDOR_OPENVPN && type == ATTRIBUTE_OPENVPN_PUSH_DHCP_OPTION)
 	)
 	{
 	 return vsa->stringFromBuf();
@@ -1491,6 +1516,7 @@ int UserAuth::createCcdFile(PluginContext *context)
 	in_addr ip3;
 	string filename;
 	char framedroutes[4096];
+	char pushroutes[4096];
 	char framednetmask_cidr[3]; // ->/24
 	char framednetmask[16]; // ->255.255.255.0
 	char mask_part[6];
@@ -1503,11 +1529,12 @@ int UserAuth::createCcdFile(PluginContext *context)
 	int len=0;
 	
 	
-	if(context->conf.getOverWriteCCFiles()==true && (this->getFramedIp().length() > 0 || this->getFramedRoutes().length() > 0))
+	if(context->conf.getOverWriteCCFiles()==true && (this->getFramedIp().length() > 0 || this->getFramedRoutes().length() > 0 || this->getPushRoutes().length() > 0 ))
 	{
 		memset(ipstring,0,100);
 		memset(framedip,0,16);
 		memset(framedroutes,0,4096);
+		memset(pushroutes,0,4096);
 			
 		//create the filename, ccd-path + commonname
 		filename=context->conf.getCcdPath()+this->getCommonname();
@@ -1525,6 +1552,7 @@ int UserAuth::createCcdFile(PluginContext *context)
 		
 		// copy in a temp-string, becaue strtok deletes the delimiter, if it is used anywhere
 		strncpy(framedroutes,this->getFramedRoutes().c_str(),4095);
+		strncpy(pushroutes,this->getPushRoutes().c_str(),4095);
 		
 		
 		if (ccdfile.is_open())
@@ -1753,6 +1781,181 @@ int UserAuth::createCcdFile(PluginContext *context)
 			
 							//write iroute to client file
 							ccdfile << "iroute " << framedip << " "<< framednetmask << "\n";
+						
+							route=strtok(NULL,";");
+					}
+				}
+			}
+
+			if (pushroutes[0]!='\0')
+			{
+				if (DEBUG (context->getVerbosity()))
+					cerr << getTime() << "RADIUS-PLUGIN: BACKGROUND AUTH: Write push routes to ccd-file.\n";
+			
+				route=strtok(pushroutes,";");
+				len=strlen(route);
+				if (len > 50) //this is too big! but the length is variable
+				{
+					cerr << getTime() <<"RADIUS-PLUGIN: Argument for Push Route is to long (>50 Characters).\n";
+					return 1;
+				}
+				else
+				{
+					while (route!=NULL)
+					{
+						j=0;k=0;
+						//set everything back for the next route entry
+						memset(mask_part,0,6);
+						memset(framednetmask_cidr,0,3);
+						memset(framedip,0,16);
+						memset(framednetmask,0,16);
+						memset(framedgw,0,16);
+						memset(framedmetric,0,5);
+						
+						//add ip address to string
+						while(route[j]!='/' && j<len)
+							{
+								if (route[j]!=' ')
+								{
+									framedip[k]=route[j];
+									k++;
+								}
+								j++;
+							}
+							k=0;
+							j++;
+							//add netmask
+							while(route[j]!=' ' && j<=len)
+							{
+								framednetmask_cidr[k]=route[j];
+								k++;
+								j++;
+							}
+							k=0;
+							//jump spaces
+							while(route[j]==' ' && j<len)
+							{
+								j++;
+							}
+							//find gateway
+							while(route[j]!='/' && j<len)
+							{
+								if (route[j]!=' ')
+								{
+									framedgw[k]=route[j];
+									k++;
+								}
+								j++;
+							}
+							j++;
+							
+							//find gateway netmask (this isn't used
+							//at the command route under linux)
+							while(route[j]!=' ' && j<len)
+							{
+								j++;
+							}
+							//jump spaces
+							
+							while(route[j]==' ' && j<len )
+							{
+								j++;
+							}
+							k=0;
+							if (j<=len)
+							{
+							
+								k=0;
+								//find the metric
+								while(route[j]!=' ' && j<len)
+								{
+									framedmetric[k]=route[j];
+									k++;
+									j++;
+								}
+							}
+																								
+							//create string for client config file
+							//transform framednetmask_cidr
+							d2=7;
+							d1=0;
+							memset(framednetmask,0,16);
+							if (atoi(framednetmask_cidr)>32)
+							{
+								cerr << getTime() << "RADIUS-PLUGIN: Bad net CIDR netmask.\n";
+							}
+							else
+							{
+								for (k=1; k<=atoi(framednetmask_cidr); k++)
+								{
+									d1=d1+pow(2,d2);
+									d2--;
+									
+									if (k==8)
+									{
+										sprintf(mask_part,"%.0lf.", d1);
+										d1=0;
+										d2=7;
+										strncat(framednetmask, mask_part, 4);
+										memset(mask_part,0,6);
+									}
+									if(k==16)
+									{
+										sprintf(mask_part,"%.0lf.", d1);
+										d1=0;
+										d2=7;
+										strncat(framednetmask, mask_part, 4);
+										memset(mask_part,0,6);
+									}
+									if(k==24)
+									{
+										sprintf(mask_part,"%.0lf.", d1);
+										d1=0;
+										d2=7;
+										strncat(framednetmask, mask_part, 4);
+										memset(mask_part,0,6);
+									}
+								}
+								if (j<8)
+								{
+										sprintf(mask_part,"%.0lf.", d1);
+										d1=0;
+										strncat(framednetmask, mask_part, 4);
+										strncat(framednetmask, "0.0.0", 5);
+										memset(mask_part,0,6);
+								}
+								else if (j<16)
+								{
+										sprintf(mask_part,"%.0lf.", d1);
+										d1=0;
+										strncat(framednetmask, mask_part, 4);
+										strncat(framednetmask, "0.0", 3);
+										memset(mask_part,0,6);
+								}
+								else if (j<24)
+								{
+										sprintf(mask_part,"%.0lf.", d1);
+										d1=0;
+										strncat(framednetmask, mask_part, 4);
+										strncat(framednetmask, "0", 1);
+										memset(mask_part,0,6);
+								}
+								else if (j>24)
+								{
+										sprintf(mask_part,"%.0lf", d1);
+										d1=0;
+										strncat(framednetmask, mask_part, 4);
+										memset(mask_part,0,6);
+								}
+								
+								
+							}
+							
+							if (DEBUG (context->getVerbosity()))
+								cerr << getTime() << "RADIUS-PLUGIN: Write route string: push route " << framedip << framednetmask << " to ccd-file.\n";
+			
+							//write iroute to client file
+							ccdfile << "push route " << framedip << " "<< framednetmask << "\n";
 						
 							route=strtok(NULL,";");
 					}

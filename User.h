@@ -46,6 +46,7 @@ protected:
 	string username;		/**<The username.*/
 	string commonname;		/**<The commonname.*/
 	string framedroutes;		/**<The framedroutes, they are stored as a string. If there are more routes, they must be delimited by an ';'*/
+	string pushroutes;
 	string framedip;		/**<The framed ip.*/
 	string callingstationid;	/**<The calling station id, in this case the real ip address of the client.*/
 	string key;			/**<A unique key to find the user in a map. */
@@ -76,6 +77,9 @@ public:
 	
 	string getFramedRoutes(void);
 	void setFramedRoutes(string);
+
+	string getPushRoutes(void);
+	void setPushRoutes(string);
 	
 	string getFramedIp(void);
 	void setFramedIp(string);

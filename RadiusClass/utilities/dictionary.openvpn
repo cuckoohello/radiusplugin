@@ -1,0 +1,31 @@
+# --push-reset
+# SYNTAX: {TRUE|FALSE}
+VENDOR		OpenVPN				27340
+
+#
+#	These attributes contain the access-level value.
+#
+BEGIN-VENDOR	OpenVPN
+ATTRIBUTE OpenVPN-PushReset		1	integer
+VALUE	OpenVPN-PushReset	FALSE	0
+VALUE	OpenVPN-PushReset	TRUE	1
+
+# push --route
+# SYNTAX: {network|ip} [netmask] [gateway] [metric]
+ATTRIBUTE    OpenVPN-Push-Route                            2	string
+
+# push --route-delay
+# SYNTAX: [n] [w]
+ATTRIBUTE OpenVPN-Push-Route-Delay		3	string
+
+# push --redirect-gateway
+# SYNTAX: {TRUE|FALSE}
+ATTRIBUTE OpenVPN-Push-Redirect-Gateway	4	integer
+VALUE	OpenVPN-Push-Redirect-Gateway	FALSE	0
+VALUE	OpenVPN-Push-Redirect-Gateway	TRUE	1
+
+# push --dhcp-option
+# SYNTAX: [parm]
+# example: DNS 10.10.10.1
+ATTRIBUTE OpenVPN-Push-Dhcp-Option		5	string
+END-VENDOR	OpenVPN

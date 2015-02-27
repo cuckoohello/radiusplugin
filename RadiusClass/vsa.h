@@ -71,6 +71,8 @@
   	//VENDOR	WISPr				14122
 #define 	 VENDOR_XEDIA 	838
   	//VENDOR	Xedia				838
+#define 	 VENDOR_OPENVPN 	27340
+  	//VENDOR	OpenVPN				27340
   	//
   	//ATTRIBUTE	User-Name			1	string	
   	//ATTRIBUTE	Password			2	string	
@@ -1422,6 +1424,11 @@
 #define 	 ATTRIBUTE_WISPR_SESSION_TERMINATE_TIME 	9  	//ATTRIBUTE	WISPr-Session-Terminate-Time	9	string	WISPr
 #define 	 ATTRIBUTE_WISPR_SESSION_TERMINATE_END_OF_DAY 	10  	//ATTRIBUTE	WISPr-Session-Terminate-End-Of-Day	10	string	WISPr
 #define 	 ATTRIBUTE_WISPR_BILLING_CLASS_OF_SERVICE 	11  	//ATTRIBUTE	WISPr-Billing-Class-Of-Service	11	string	WISPr
+#define 	 ATTRIBUTE_OPENVPN_PUSHRESET 	1  	//ATTRIBUTE	OpenVPN-PushReset		1	integer	OpenVPN
+#define 	 ATTRIBUTE_OPENVPN_PUSH_ROUTE 	2  	//ATTRIBUTE	OpenVPN-Push-Route		2	string	OpenVPN
+#define 	 ATTRIBUTE_OPENVPN_PUSH_ROUTE_DELAY 	3  	//ATTRIBUTE	OpenVPN-Push-Route-Delay	3	string	OpenVPN
+#define 	 ATTRIBUTE_OPENVPN_PUSH_REDIRECT_GATEWAY 	4  	//ATTRIBUTE	OpenVPN-Push-Redirect-Gateway	4	integer	OpenVPN
+#define 	 ATTRIBUTE_OPENVPN_PUSH_DHCP_OPTION 	5  	//ATTRIBUTE	OpenVPN-Push-Dhcp-Option	5	string	OpenVPN
   	//
   	//VALUE	AAT-IP-TOS			IP-TOS-Normal			0	Alcatel
   	//VALUE	AAT-IP-TOS			IP-TOS-Disabled			1	Alcatel
@@ -2717,5 +2724,9 @@
   	//VALUE	Versanet-Termination-Cause	Clears-previous-disc-reason	21	Versanet
   	//VALUE	Versanet-Termination-Cause	No-connection-established	22	Versanet
   	//VALUE	Versanet-Termination-Cause	Disconnect-after-three-retrains	23	Versanet
+  	//VALUE	OpenVPN-PushReset		FALSE				0	OpenVPN
+  	//VALUE	OpenVPN-PushReset		TRUE				1	OpenVPN
+  	//VALUE	OpenVPN-Push-Redirect-Gateway	FALSE				0	OpenVPN
+  	//VALUE	OpenVPN-Push-Redirect-Gateway	TRUE				1	OpenVPN
   	//
 #endif  
