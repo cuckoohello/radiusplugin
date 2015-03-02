@@ -1609,6 +1609,7 @@ int UserAuth::createCcdFile(PluginContext *context)
 					cerr << getTime() << "RADIUS-PLUGIN: Write " << "push-reset" << " ccd-file.\n";
 				
 				ccdfile << "push-reset" <<"\n";
+				ccdfile << "config /etc/openvpn/auth/ccd_pushreset.conf" << "\n";
 			}
 
 			if (this->getPushRouteDelay().length() > 0)
