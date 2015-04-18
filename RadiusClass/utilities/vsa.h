@@ -1429,6 +1429,7 @@
 #define 	 ATTRIBUTE_OPENVPN_PUSH_ROUTE_DELAY 	3  	//ATTRIBUTE	OpenVPN-Push-Route-Delay	3	string	OpenVPN
 #define 	 ATTRIBUTE_OPENVPN_PUSH_REDIRECT_GATEWAY 	4  	//ATTRIBUTE	OpenVPN-Push-Redirect-Gateway	4	integer	OpenVPN
 #define 	 ATTRIBUTE_OPENVPN_PUSH_DHCP_OPTION 	5  	//ATTRIBUTE	OpenVPN-Push-Dhcp-Option	5	string	OpenVPN
+#define 	 ATTRIBUTE_OPENVPN_USER_MODE 	6  	//ATTRIBUTE	OpenVPN-User-Mode		6	string	OpenVPN
   	//
   	//VALUE	AAT-IP-TOS			IP-TOS-Normal			0	Alcatel
   	//VALUE	AAT-IP-TOS			IP-TOS-Disabled			1	Alcatel

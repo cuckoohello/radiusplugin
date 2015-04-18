@@ -1061,6 +1061,7 @@ else if (
 || (id == VENDOR_OPENVPN && type == ATTRIBUTE_OPENVPN_PUSH_ROUTE)
 || (id == VENDOR_OPENVPN && type == ATTRIBUTE_OPENVPN_PUSH_ROUTE_DELAY)
 || (id == VENDOR_OPENVPN && type == ATTRIBUTE_OPENVPN_PUSH_DHCP_OPTION)
+|| (id == VENDOR_OPENVPN && type == ATTRIBUTE_OPENVPN_USER_MODE)
 )
 {
  return vsa->stringFromBuf();

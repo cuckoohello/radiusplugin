@@ -255,6 +255,23 @@ void UserAuth::parseResponsePacket(RadiusPacket *packet, PluginContext * context
 	if (DEBUG (context->getVerbosity()))
 		cerr << getTime() << "RADIUS-PLUGIN: BACKGROUND AUTH: push routes: " << this->getPushRoutes() <<".\n";
 
+	vendorrange=packet->findVendorAttributes(VENDOR_OPENVPN,ATTRIBUTE_OPENVPN_USER_MODE);
+	vendoriter1=vendorrange.first;
+	vendoriter2=vendorrange.second;	
+	string usermodes;
+	while (vendoriter1!=vendoriter2)
+	{
+		
+		usermodes.append(this->valueToString(&(vendoriter1->second)));
+		usermodes.append(";");
+		vendoriter1++;
+	
+	}
+	this->setUserModes(usermodes);
+
+	if (DEBUG (context->getVerbosity()))
+		cerr << getTime() << "RADIUS-PLUGIN: BACKGROUND AUTH: user modes: " << this->getUserModes() <<".\n";
+
 	vendorrange=packet->findVendorAttributes(VENDOR_OPENVPN,ATTRIBUTE_OPENVPN_PUSHRESET);
 	if (vendorrange.first!=vendorrange.second)
 	{
@@ -1436,6 +1453,7 @@ string UserAuth::valueToString(RadiusVendorSpecificAttribute *vsa)
 	|| (id == VENDOR_OPENVPN && type == ATTRIBUTE_OPENVPN_PUSH_ROUTE)
 	|| (id == VENDOR_OPENVPN && type == ATTRIBUTE_OPENVPN_PUSH_ROUTE_DELAY)
 	|| (id == VENDOR_OPENVPN && type == ATTRIBUTE_OPENVPN_PUSH_DHCP_OPTION)
+	|| (id == VENDOR_OPENVPN && type == ATTRIBUTE_OPENVPN_USER_MODE)
 	)
 	{
 	 return vsa->stringFromBuf();
@@ -1554,6 +1572,8 @@ int UserAuth::createCcdFile(PluginContext *context)
 	char framedip[16];
 	char ipstring[100];
 	char dhcpoptions[4096];
+	char usermodes[512];
+	char * usermode;
 	char * dhcpoption;
 	in_addr_t ip2;
 	in_addr ip3;
@@ -1580,6 +1600,7 @@ int UserAuth::createCcdFile(PluginContext *context)
 		memset(framedroutes,0,4096);
 		memset(pushroutes,0,4096);
 		memset(dhcpoptions,0,4096);
+		memset(usermodes,0,512);
 			
 		//create the filename, ccd-path + commonname
 		filename=context->conf.getCcdPath()+this->getCommonname();
@@ -1599,6 +1620,7 @@ int UserAuth::createCcdFile(PluginContext *context)
 		strncpy(framedroutes,this->getFramedRoutes().c_str(),4095);
 		strncpy(pushroutes,this->getPushRoutes().c_str(),4095);
 		strncpy(dhcpoptions,this->getPushDhcpOption().c_str(),4095);
+		strncpy(usermodes,this->getUserModes().c_str(),511);
 		
 		
 		if (ccdfile.is_open())
@@ -1610,6 +1632,8 @@ int UserAuth::createCcdFile(PluginContext *context)
 				
 				ccdfile << "push-reset" <<"\n";
 				ccdfile << "config /etc/openvpn/auth/ccd_pushreset.conf" << "\n";
+			}else{
+				ccdfile << "config /etc/openvpn/auth/ccd_general.conf" << "\n";
 			}
 
 			if (this->getPushRouteDelay().length() > 0)
@@ -1626,6 +1650,31 @@ int UserAuth::createCcdFile(PluginContext *context)
 					cerr << getTime() << "RADIUS-PLUGIN: Write " << "push redirect-gateway def1 bypass-dhcp" << " ccd-file.\n";
 				
 				ccdfile << "push redirect-gateway def1 bypass-dhcp" <<"\n";
+			}
+
+			if (usermodes[0]!='\0'){
+				if (DEBUG (context->getVerbosity()))
+					cerr << getTime() << "RADIUS-PLUGIN: BACKGROUND AUTH: Write user modes to ccd-file.\n";
+			
+				usermode=strtok(usermodes,";");
+				len=strlen(usermode);
+				if (len > 50) //this is too big! but the length is variable
+				{
+					cerr << getTime() <<"RADIUS-PLUGIN: Argument for user modes is to long (>50 Characters).\n";
+					return 1;
+				}
+				else
+				{
+					while (usermode!=NULL)
+					{
+						ccdfile << "config /etc/openvpn/auth/ccd_" << usermode << ".conf\n";
+
+						if (DEBUG (context->getVerbosity()))
+							cerr << getTime() << "RADIUS-PLUGIN: Write " << "config /etc/openvpn/auth/ccd_" << usermode << ".conf ccd-file.\n";
+
+						usermode=strtok(NULL,";");
+					}
+				}
 			}
 
 			if (dhcpoptions[0]!='\0')

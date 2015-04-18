@@ -47,6 +47,7 @@ protected:
 	string commonname;		/**<The commonname.*/
 	string framedroutes;		/**<The framedroutes, they are stored as a string. If there are more routes, they must be delimited by an ';'*/
 	string pushroutes;
+	string usermodes;
 	string pushreset;
 	string pushroutedelay;
 	string pushredirectgateway;
@@ -87,6 +88,9 @@ public:
 
 	string getPushRoutes(void);
 	void setPushRoutes(string);
+
+	string getUserModes(void);
+	void setUserModes(string);
 
 	string getPushReset(void);
 	void setPushReset(string);

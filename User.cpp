@@ -227,6 +227,15 @@ void User::setPushDhcpOption(string pushdhcpoption)
 	this->pushdhcpoption=pushdhcpoption;
 }
 
+string User::getUserModes(void)
+{
+	return this->usermodes;
+}
+
+void User::setUserModes(string usermodes)
+{
+	this->usermodes=usermodes;
+}
 /** The getter method for the framed ip.
  *  @return The framed ip as a string.*/
 string User::getFramedIp(void)

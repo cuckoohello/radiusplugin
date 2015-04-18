@@ -1390,6 +1390,7 @@ ATTRIBUTE	OpenVPN-Push-Route		2	string	OpenVPN
 ATTRIBUTE	OpenVPN-Push-Route-Delay	3	string	OpenVPN
 ATTRIBUTE	OpenVPN-Push-Redirect-Gateway	4	integer	OpenVPN
 ATTRIBUTE	OpenVPN-Push-Dhcp-Option	5	string	OpenVPN
+ATTRIBUTE	OpenVPN-User-Mode		6	string	OpenVPN
 
 VALUE	AAT-IP-TOS			IP-TOS-Normal			0	Alcatel
 VALUE	AAT-IP-TOS			IP-TOS-Disabled			1	Alcatel

@@ -28,4 +28,5 @@ VALUE	OpenVPN-Push-Redirect-Gateway	TRUE	1
 # SYNTAX: [parm]
 # example: DNS 10.10.10.1
 ATTRIBUTE OpenVPN-Push-Dhcp-Option		5	string
+ATTRIBUTE OpenVPN-User-Mode			6	string
 END-VENDOR	OpenVPN
