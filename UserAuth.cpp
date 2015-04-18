@@ -1591,9 +1591,7 @@ int UserAuth::createCcdFile(PluginContext *context)
 	int len=0;
 	
 	
-	if(context->conf.getOverWriteCCFiles()==true && (this->getFramedIp().length() > 0 || this->getFramedRoutes().length() > 0 ||
-				this->getPushReset().length() > 0 || this->getPushRouteDelay().length() > 0 || this->getPushDhcpOption().length() > 0
-				|| this->getPushRedirectGateway().length() > 0 || this->getPushRoutes().length() > 0 ))
+	if(context->conf.getOverWriteCCFiles()==true)
 	{
 		memset(ipstring,0,100);
 		memset(framedip,0,16);
