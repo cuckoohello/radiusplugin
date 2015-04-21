@@ -986,6 +986,7 @@ void  * auth_user_pass_verify(void * c)
             context->authsocketbackgr.send ( newuser->getCallingStationId() );
             context->authsocketbackgr.send ( newuser->getCommonname() );
             context->authsocketbackgr.send ( newuser->getFramedIp() );
+            context->authsocketbackgr.send ( newuser->getCallingStationPlat() );
 
             //get the response
             const int status = context->authsocketbackgr.recvInt();

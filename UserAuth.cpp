@@ -1631,7 +1631,11 @@ int UserAuth::createCcdFile(PluginContext *context)
 				ccdfile << "push-reset" <<"\n";
 				ccdfile << "config /etc/openvpn/auth/ccd_pushreset.conf" << "\n";
 			}else{
-				ccdfile << "config /etc/openvpn/auth/ccd_general.conf" << "\n";
+				if (this->getCallingStationPlat() == "win"){
+					ccdfile << "config /etc/openvpn/auth/ccd_general_win.conf" << "\n";
+				}else{
+					ccdfile << "config /etc/openvpn/auth/ccd_general.conf" << "\n";
+				}
 			}
 
 			if (this->getPushRouteDelay().length() > 0)
