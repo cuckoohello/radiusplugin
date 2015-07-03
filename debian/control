@@ -1,0 +1,31 @@
+Source: openvpn-auth-radius
+Maintainer: Cygnus Networks GmbH <debian@cygnusnetworks.de>
+Uploaders: Dr. Torge Szczepanek <debian@cygnusnetworks.de>
+Standards-Version: 3.9.5
+Section: net
+Priority: extra
+Build-Depends: debhelper (>= 9), libgcrypt11-dev
+Homepage: http://www.nongnu.org/radiusplugin/
+
+Package: openvpn-auth-radius
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openvpn (>= 2)
+Description: OpenVPN RADIUS authentication module
+ A plugin for OpenVPN 2.x that implements authentication of users against a
+ RADIUS server. It features:
+ * RADIUS authentication and accounting support for OpenVPN
+ * analysis of RADIUS attributes:
+   o framed ip address
+   o framed routes
+   o acct interim interval
+   o vendor specific attributes by additional scripts
+
+Package: openvpn-auth-radius-dbg
+Architecture: any
+Depends: openvpn-auth-radius (= ${binary:Version}), ${misc:Depends}
+Section: debug
+Description: debugging symbols for openvpn-plugin-radius
+ openvpn-auth-radius is a plugin for OpenVPN 2.x that implements
+ authentication of users against a RADIUS server.
+ .
+ This package contains the debugging symbols for openvpn-auth-radius.

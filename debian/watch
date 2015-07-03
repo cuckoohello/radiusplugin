@@ -1,0 +1,2 @@
+version=3
+opts="uversionmangle=s/_/-/g" http://www.nongnu.org/radiusplugin/radiusplugin_v(.*)\.tar\.gz
