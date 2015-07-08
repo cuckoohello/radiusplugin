@@ -58,7 +58,9 @@ int UserAuth::sendAcceptRequestPacket(PluginContext * context)
 				ra7(ATTRIB_NAS_Port_Type),
 				ra8(ATTRIB_Service_Type),
 				ra9(ATTRIB_Framed_IP_Address),
-				ra10(ATTRIB_Acct_Session_ID, this->getSessionId());
+				ra10(ATTRIB_Acct_Session_ID, this->getSessionId()),
+				ra11(ATTRIB_Calling_Station_Plat, this->getCallingStationPlat()),
+				ra12(ATTRIB_Calling_Station_Hwaddr, this->getCallingStationHwaddr());
 	
 	
 	if (DEBUG (context->getVerbosity()))
@@ -126,6 +128,16 @@ int UserAuth::sendAcceptRequestPacket(PluginContext * context)
 	if (packet.addRadiusAttribute(&ra10))
 	{
 		cerr << getTime() << "RADIUS-PLUGIN: Fail to add attribute ATTRIB_Acct_Session_ID.\n";
+	}
+
+	if (packet.addRadiusAttribute(&ra11))
+	{
+		cerr << getTime() << "RADIUS-PLUGIN: Fail to add attribute ATTRIB_Calling_Station_Plat.\n";
+	}
+
+	if (packet.addRadiusAttribute(&ra12))
+	{
+		cerr << getTime() << "RADIUS-PLUGIN: Fail to add attribute ATTRIB_Calling_Station_Hwaddr.\n";
 	}
 	
 	if(strcmp(context->radiusconf.getServiceType(),""))
@@ -1630,12 +1642,6 @@ int UserAuth::createCcdFile(PluginContext *context)
 				
 				ccdfile << "push-reset" <<"\n";
 				ccdfile << "config /etc/openvpn/auth/ccd_pushreset.conf" << "\n";
-			}else{
-				if (this->getCallingStationPlat() == "win"){
-					ccdfile << "config /etc/openvpn/auth/ccd_general_win.conf" << "\n";
-				}else{
-					ccdfile << "config /etc/openvpn/auth/ccd_general.conf" << "\n";
-				}
 			}
 
 			if (this->getPushRouteDelay().length() > 0)
