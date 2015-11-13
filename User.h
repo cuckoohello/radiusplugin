@@ -53,6 +53,7 @@ protected:
 	string pushredirectgateway;
 	string pushdhcpoption;
 	string framedip;		/**<The framed ip.*/
+	string framedmask;		/**<The framed ip.*/
 	string callingstationid;	/**<The calling station id, in this case the real ip address of the client.*/
 	string callingstationplat;	/**<Openvpn client platform: android/io/win/linux */
 	string callingstationhwaddr;	/**<Openvpn linux/win client hwaddr */
@@ -106,6 +107,9 @@ public:
 	
 	string getFramedIp(void);
 	void setFramedIp(string);
+
+	string getFramedMask(void);
+	void setFramedMask(string);
 	
 	string getKey(void);
 	void setKey(string);

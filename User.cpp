@@ -25,6 +25,7 @@
 User::User()
 {
 	this->framedip="";
+	this->framedmask="";
 	this->framedroutes="";
 	this->key="";
         this->statusfilekey="";
@@ -70,6 +71,7 @@ User & User::operator=(const User & u)
 	this->commonname=u.commonname;
 	this->framedroutes=u.framedroutes;
 	this->framedip=u.framedip;
+	this->framedmask=u.framedmask;
 	this->key=u.key;
         this->statusfilekey=u.statusfilekey;
 	this->callingstationid=u.callingstationid;
@@ -110,6 +112,7 @@ User::User(const User & u)
 	this->commonname=u.commonname;
 	this->framedroutes=u.framedroutes;
 	this->framedip=u.framedip;
+	this->framedmask=u.framedmask;
 	this->key=u.key;
         this->statusfilekey=u.statusfilekey;
 	this->callingstationid=u.callingstationid;
@@ -247,6 +250,19 @@ string User::getFramedIp(void)
 void User::setFramedIp(string ip)
 {
 	this->framedip=ip;
+}
+
+/** The getter method for the framed mask.
+ *  @return The framed mask as a string.*/
+string User::getFramedMask(void)
+{
+	return this->framedmask;
+}
+/** The setter method for the framedmask.
+ * @param ip The framedmask.*/
+void User::setFramedMask(string ip)
+{
+	this->framedmask=ip;
 }
 
 /** The getter method for the fkey.

@@ -88,12 +88,16 @@ user1  Cleartext-Password := "testing"
        Framed-Route += "192.168.101.0/26 10.8.0.1/32 1",
        Framed-Route += "192.168.111.0/24 10.8.0.1/32 1",
        Framed-Route += "192.168.112.0/24 10.8.0.1/32 1",
-       Acct-Interim-Interval=5,
-       Ascend-Data-Rate=100,
-       Ascend-Xmit-Rate=200,
-       Framed-Protocol = PPP
-
-The Framed-Route attribute must be in the format as shown above!
+       Acct-Interim-Interval = 5,
+       Ascend-Data-Rate = 100,
+       Ascend-Xmit-Rate = 200,
+       Framed-Protocol = PPP,
+       OpenVPN-PushReset = 1,
+       OpenVPN-Push-Route += "192.168.111.1/32 10.8.0.1/32 1",
+       OpenVPN-Push-Route-Delay = 10,
+       OpenVPN-Push-Redirect-Gateway = 0,
+       OpenVPN-Push-Dhcp-Option = "",
+       OpenVPN-User-Mode = ""
 
 
 COMPILE 
@@ -120,6 +124,8 @@ RADIUS ATTRIBUTES WHICH PARSED BY THE PLUGIN AND WRITE TO THE CLIENT CONFIG FILE
 - Framed ip address
 - Acct Interim Interval
 - Framed Routes (only in following format, e.g.: "192.168.101.0/26 10.8.0.1/32 1")
+- Framed ip netmask (255.255.255.0)
+- Openvpn attributes (push route, push route delay and etc)
 
 
 OTHER RADIUS ATTRIBUTES
