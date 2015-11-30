@@ -1,3 +1,9 @@
+openvpn-auth-radius (2.3-8) unstable; urgency=low
+
+  * Fix terminate called after throwing an instance of 'std::bad_alloc' issue
+
+ -- Yafeng Shan <yafeng.shan@gmail.com>  Mon, 30 Nov 2015 21:19:04 +0800
+
 openvpn-auth-radius (2.3-7) unstable; urgency=low
 
   * Add support radius attribute Framed-IP-Netmask

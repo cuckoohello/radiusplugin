@@ -204,6 +204,8 @@ void AccountingProcess::Accounting(PluginContext * context)
                 try
                 {
                     key=context->acctsocketforegr.recvStr();
+                    bytesout = strtoull(context->acctsocketforegr.recvStr().c_str(),NULL,10);
+                    bytesin = strtoull(context->acctsocketforegr.recvStr().c_str(),NULL,10);
                 }
                 catch (Exception &e)
                 {
@@ -250,8 +252,6 @@ void AccountingProcess::Accounting(PluginContext * context)
                     try
                     {
                         //delete the user from the accounting scheduler
-			bytesout = strtoull(context->acctsocketforegr.recvStr().c_str(),NULL,10);
-			bytesin = strtoull(context->acctsocketforegr.recvStr().c_str(),NULL,10);
 			user->setBytesIn(bytesin & 0xFFFFFFFF);
 			user->setBytesOut(bytesout & 0xFFFFFFFF);
 			user->setGigaIn(bytesin >> 32);
