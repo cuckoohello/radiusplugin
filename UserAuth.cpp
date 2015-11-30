@@ -340,7 +340,21 @@ void UserAuth::parseResponsePacket(RadiusPacket *packet, PluginContext * context
     	cerr << getTime() << "RADIUS-PLUGIN: BACKGROUND AUTH: framed ip: " << this->getFramedIp() <<".\n";
 	
 	
+	//Find attribute Framed-IP-Netmask	
+	range=packet->findAttributes(9);
+	iter1=range.first;
+	iter2=range.second;	
 	
+	
+	if (iter1!=iter2)
+	{
+		this->setFramedMask(iter1->second.ipFromBuf());
+	}
+	
+	if (DEBUG (context->getVerbosity()))
+    	cerr << getTime() << "RADIUS-PLUGIN: BACKGROUND AUTH: framed netmask: " << this->getFramedMask() <<".\n";
+
+
 	range=packet->findAttributes(85);
 	iter1=range.first;
 	iter2=range.second;		
@@ -1582,6 +1596,7 @@ int UserAuth::createCcdFile(PluginContext *context)
 	
 	char * route;
 	char framedip[16];
+	char framedmask[16];
 	char ipstring[100];
 	char dhcpoptions[4096];
 	char usermodes[512];
@@ -1607,6 +1622,7 @@ int UserAuth::createCcdFile(PluginContext *context)
 	{
 		memset(ipstring,0,100);
 		memset(framedip,0,16);
+		memset(framedmask,0,16);
 		memset(framedroutes,0,4096);
 		memset(pushroutes,0,4096);
 		memset(dhcpoptions,0,4096);
@@ -1724,7 +1740,14 @@ int UserAuth::createCcdFile(PluginContext *context)
 				strncat(ipstring, " ", 1);
 				
 				
-				if(context->conf.getSubnet()[0]!='\0')
+				if(this->framedmask[0]!='\0')
+				{
+					strncat(ipstring, this->getFramedMask().c_str() , 15);
+					if (DEBUG (context->getVerbosity()))
+						cerr << getTime() << "RADIUS-PLUGIN: BACKGROUND AUTH: Create ifconfig-push for topology freeradius.\n";
+			
+				}
+				else if(context->conf.getSubnet()[0]!='\0')
 				{
 					strncat(ipstring, context->conf.getSubnet() , 15);
 					if (DEBUG (context->getVerbosity()))

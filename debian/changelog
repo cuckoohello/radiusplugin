@@ -1,3 +1,9 @@
+openvpn-auth-radius (2.3-7) unstable; urgency=low
+
+  * Add support radius attribute Framed-IP-Netmask
+
+ -- Artem Karamyshev <fessoga5@gmail.com>  Fri, 13 Nov 2015 11:52:04 +0100
+
 openvpn-auth-radius (2.3-6) unstable; urgency=low
 
   * Openvpn auth radius for somevpn
